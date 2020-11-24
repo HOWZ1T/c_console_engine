@@ -14,6 +14,7 @@
 
 #include "colors.h"
 #include "chars.h"
+#include "../adt/vector.h"
 
 /*   ---   STRUCTS   ---   */
 
@@ -22,7 +23,6 @@ typedef struct Console {
     SMALL_RECT rect_window;
     CHAR_INFO* scr_buff;
     CONSOLE_CURSOR_INFO cursor_info;
-    wchar_t* title;
     int width, height, font_w, font_h;
     short clear_color, clear_char;
 
@@ -66,7 +66,7 @@ static bool console_in_focus = true;
 
 /*   ---   FUNCTIONS   ---   */
 
-boolean create_console(wchar_t* title, int width, int height, int font_w, int font_h,
+boolean create_console(int width, int height, int font_w, int font_h,
                        void (*close_handler)(),
                        void (*create_handler)(),
                        void (*update)(float elapsed_time),
@@ -82,7 +82,6 @@ int console_height();
 int console_width();
 int console_mouse_x();
 int console_mouse_y();
-wchar_t* console_title();
 
 bool console_set_mouse_xy(int x, int y);
 bool console_set_mouse_visible(bool visible);

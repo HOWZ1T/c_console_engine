@@ -72,7 +72,7 @@ void error_exit(LPTSTR lpszFunction)
     ExitProcess(dw);
 }
 
-boolean create_console(wchar_t* title, int width, int height, int font_w, int font_h,
+boolean create_console(int width, int height, int font_w, int font_h,
                        void (*close_handler)(),
                        void (*create_handler)(),
                        void (*update)(float elapsed_time),
@@ -97,11 +97,6 @@ boolean create_console(wchar_t* title, int width, int height, int font_w, int fo
 
     c_console->h_in = h_in;
     c_console->h_console = h_console;
-
-    c_console->title = title;
-    if (!SetConsoleTitle(title)) {
-        error_exit(L"create_console(): SetConsoleTitle");
-    }
 
     memset(console_key_new_state, 0, 256 * sizeof(short));
     memset(console_key_old_state, 0, 256 * sizeof(short));
@@ -353,10 +348,6 @@ int console_mouse_y() {
     return c_mouse_pos.Y;
 }
 
-wchar_t* console_title() {
-    return c_console->title;
-}
-
 bool console_set_mouse_xy(int x, int y) {
     bool res;
     COORD new = {
@@ -405,7 +396,6 @@ void set_console_title(wchar_t* title) {
     if(!SetConsoleTitle(title)) {
         error_exit(L"SetConsoleTitle");
     }
-    c_console->title = title;
 }
 
 /*   ---   DRAWING ROUTINES   ---   */

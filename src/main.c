@@ -1,4 +1,5 @@
 #include "console/console.h"
+#include "adt/vector.h"
 #include <stdio.h>
 
 void create() {}
@@ -7,8 +8,8 @@ void close() {}
 
 void update(float elapsed) {
     wchar_t s[256];
-    swprintf_s(s, 256, L"%s - FPS: %3.2f", console_title(), (1.0f/elapsed));
-    set_console_title((wchar_t *) s); // TODO: BUG SET CONSOLE TITLE BUFFER IN CONSOLE STRUCT TOO SMALL
+    swprintf_s(s, 256, L"%s - FPS: %3.2f", L"Crack", (1.0f/elapsed));
+    set_console_title(s);
 }
 
 void draw_numbers() {
@@ -45,8 +46,29 @@ void render() {
 }
 
 int main(int argc, const char* argv[]) {
-    create_console(L"Crack", 80, 45, 16, 16, close, create, update, render);
+    /*create_console(80, 45, 16, 16, close, create, update, render);
     run_console();
-    free_console();
+    free_console();*/
+
+    char buff[255];
+    vec v = vec_create(1);
+    vec_dump(buff, &v);
+    printf("%s\n", buff);
+
+    for (int i = 0; i <= 255; i++) {
+        vec_add(&v, (void *) i);
+        vec_dump(buff, &v);
+        printf("%2d | %s\n", (int)vec_at(&v, i), buff);
+    }
+
+    printf("\nmoving to remove\n\n");
+
+    for (int i = 0; i <= 255; i++) {
+        int x = (int) vec_remove(&v);
+        vec_dump(buff, &v);
+        printf("%2d | %s\n", x, buff);
+    }
+
+    vec_free(&v);
     return 0;
 }
