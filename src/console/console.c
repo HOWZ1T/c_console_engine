@@ -100,11 +100,11 @@ boolean create_console(int width, int height, int font_w, int font_h,
 
     memset(console_key_new_state, 0, 256 * sizeof(short));
     memset(console_key_old_state, 0, 256 * sizeof(short));
-    memset(console_keys, 0, 256 * sizeof(KeyState));
+    memset(console_keys, 0, 256 * sizeof(key_state));
 
     memset(console_mouse_new_state, false, 5 * sizeof(bool));
     memset(console_mouse_old_state, false, 5 * sizeof(bool));
-    memset(console_mouse, false, 5 * sizeof(KeyState));
+    memset(console_mouse, false, 5 * sizeof(key_state));
 
     SMALL_RECT rect_window = {0, 0, 1, 1};
     SetConsoleWindowInfo(c_console->h_console, TRUE, &rect_window);
@@ -332,6 +332,10 @@ void run_console() {
     }
 }
 
+void stop_console() {
+    c_should_close = true;
+}
+
 int console_width() {
     return c_console->width;
 }
@@ -392,9 +396,47 @@ bool console_set_mouse_size(int size) {
     return res;
 }
 
+key_state console_get_key(int vk) {
+    return console_keys[vk];
+}
+
+key_state console_get_mouse(int vk) {
+    return console_mouse[vk];
+}
+
 void set_console_title(wchar_t* title) {
     if(!SetConsoleTitle(title)) {
         error_exit(L"SetConsoleTitle");
+    }
+}
+
+/*   ---   UTILITIES   ---   */
+
+void brensenham_line(vec *v, int x1, int y1, int x2, int y2) {
+    double dx = abs(x2-x1);
+    double sx = (x1 < x2) ? 1 : -1;
+    double dy = -abs(y2-y1);
+    double sy = (y1 < y2) ? 1 : -1;
+    double err = dx + dy;
+    double e2 = 0;
+    while (true) {
+        Point* p = malloc(sizeof(Point));
+        p->x = x1;
+        p->y = y1;
+        vec_add(v, (void *) p);
+
+        if (x1 == x2 && y1 == y2) break;
+
+        e2 = 2 * err;
+        if (e2 >= dy) {
+            err += dy;
+            x1 += sx;
+        }
+
+        if (e2 <= dx) {
+            err += dx;
+            y1 += sy;
+        }
     }
 }
 
@@ -412,4 +454,19 @@ void console_clear(WCHAR chr, WORD attributes) {
         c_console->scr_buff[i].Char.UnicodeChar = chr;
         c_console->scr_buff[i].Attributes = attributes;
     }
+}
+
+void console_line(int x1, int y1, int x2, int y2, WCHAR chr, WORD attributes) {
+    int estimated_capacity = (int) ceil(sqrt(pow((x2-x1), 2) + pow((y2-1), 2)));
+    vec points = vec_create(max(estimated_capacity, 1));
+
+    // brensenham line
+    brensenham_line(&points, x1, y1, x2, y2);
+    for (int i = 0; i < points.size; i++) {
+        Point* p = (Point*) points.arr[i];
+        console_draw(p->x, p->y, chr, attributes);
+        free(p);
+    }
+
+    vec_free(&points);
 }

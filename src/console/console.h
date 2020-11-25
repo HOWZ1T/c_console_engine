@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <strsafe.h>
 #include <time.h>
+#include <math.h>
 
 #include "colors.h"
 #include "chars.h"
@@ -32,6 +33,10 @@ typedef struct Console {
     void (*render)();
 } Console;
 
+typedef struct Point {
+    int x, y;
+} Point;
+
 /*   ---   MODIFIER KEYS   ---   */
 static const __int8 MOD_NONE = 1;
 
@@ -49,15 +54,15 @@ static const __int8 MOD_WINDOWS = 8;
 // TODO IMPLEMENT MODIFIER ON KEYSTATE
 /*   ---   END MODIFIER KEYS   ---   */
 
-typedef struct KeyState {
+typedef struct key_state {
     bool pressed;
     bool released;
     bool held;
-} KeyState;
+} key_state;
 
 /*   ---   VARIABLES   ---   */
 
-static KeyState console_keys[256], console_mouse[5];
+static key_state console_keys[256], console_mouse[5];
 static short console_key_old_state[256] = {0};
 static short console_key_new_state[256] = {0};
 static bool console_mouse_old_state[5] = {0};
@@ -75,6 +80,7 @@ boolean create_console(int width, int height, int font_w, int font_h,
 
 void free_console();
 void run_console();
+void stop_console();
 void set_console_title(wchar_t* title);
 void error_exit(LPTSTR lpszFunction);
 
@@ -87,7 +93,15 @@ bool console_set_mouse_xy(int x, int y);
 bool console_set_mouse_visible(bool visible);
 bool console_set_mouse_size(int size);
 
+key_state console_get_key(int vk);
+key_state console_get_mouse(int vk);
+
+/*   ---   UTILITIES   ---   */
+void brensenham_line(vec *v, int x1, int y1, int x2, int y2);
+
+/*   ---   DRAWING ROUTINES   ---   */
 void console_clear(WCHAR chr, WORD attributes);
 void console_draw(int x, int y, WCHAR chr, WORD attributes);
+void console_line(int x1, int y1, int x2, int y2, WCHAR chr, WORD attributes);
 
 #endif //CONSOLE_H

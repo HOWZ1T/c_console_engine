@@ -6,10 +6,21 @@ void create() {}
 
 void close() {}
 
+Point p1 = {40, 23}, p2 = {40, 23};
+
 void update(float elapsed) {
     wchar_t s[256];
     swprintf_s(s, 256, L"%s - FPS: %3.2f", L"Crack", (1.0f/elapsed));
     set_console_title(s);
+
+    if (console_get_key(VK_ESCAPE).released) {
+        stop_console();
+    }
+
+    if (console_get_mouse(1).held) {
+        p2.x = console_mouse_x();
+        p2.y = console_mouse_y();
+    }
 }
 
 void draw_numbers() {
@@ -43,32 +54,13 @@ void draw_numbers() {
 
 void render() {
     draw_numbers();
+    console_line(p1.x, p1.y, p2.x, p2.y, U_FULL_BLOCK, FG_CYAN);
 }
 
 int main(int argc, const char* argv[]) {
-    /*create_console(80, 45, 16, 16, close, create, update, render);
+    create_console(80, 45, 16, 16, close, create, update, render);
     run_console();
-    free_console();*/
+    free_console();
 
-    char buff[255];
-    vec v = vec_create(1);
-    vec_dump(buff, &v);
-    printf("%s\n", buff);
-
-    for (int i = 0; i <= 255; i++) {
-        vec_add(&v, (void *) i);
-        vec_dump(buff, &v);
-        printf("%2d | %s\n", (int)vec_at(&v, i), buff);
-    }
-
-    printf("\nmoving to remove\n\n");
-
-    for (int i = 0; i <= 255; i++) {
-        int x = (int) vec_remove(&v);
-        vec_dump(buff, &v);
-        printf("%2d | %s\n", x, buff);
-    }
-
-    vec_free(&v);
     return 0;
 }
