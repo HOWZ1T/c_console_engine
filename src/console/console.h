@@ -103,5 +103,11 @@ void brensenham_line(vec *v, int x1, int y1, int x2, int y2);
 void console_clear(WCHAR chr, WORD attributes);
 void console_draw(int x, int y, WCHAR chr, WORD attributes);
 void console_line(int x1, int y1, int x2, int y2, WCHAR chr, WORD attributes);
+void console_rect(int x, int y, int w, int h, WCHAR chr, WORD attributes);
+void console_rect_fill(int x, int y, int w, int h, WCHAR chr, WORD attributes);
+void console_ellipse(int rx, int ry, int xc, int yc, WCHAR chr, WORD attributes);
+void console_ellipse_fill(int rx, int ry, int xc, int yc, WCHAR chr, WORD attributes);
+void console_circle(int r, int xc, int yc, WCHAR chr, WORD attributes);
+void console_circle_fill(int r, int xc, int yc, WCHAR chr, WORD attributes);
 
 #endif //CONSOLE_H

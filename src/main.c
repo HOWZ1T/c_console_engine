@@ -55,6 +55,8 @@ void draw_numbers() {
 void render() {
     draw_numbers();
     console_line(p1.x, p1.y, p2.x, p2.y, U_FULL_BLOCK, FG_CYAN);
+    console_rect_fill(1, 1, 10, 10, U_FULL_BLOCK, FG_BLUE);
+    console_ellipse_fill(10, 10, 40, 23, U_FULL_BLOCK, FG_DARK_MAGENTA);
 }
 
 int main(int argc, const char* argv[]) {
