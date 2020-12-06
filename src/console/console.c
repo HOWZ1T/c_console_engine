@@ -1,4 +1,4 @@
-#include "console.h"
+#include "../include/console/console.h"
 
 /*   ---   PRIVATE   ---   */
 bool c_should_close = false;
@@ -11,7 +11,7 @@ COORD c_mouse_pos = {
 double PCFreq = 0.0;
 __int64 CounterStart = 0;
 
-void StartCounter()
+void start_counter()
 {
     LARGE_INTEGER li;
     if(!QueryPerformanceFrequency(&li))
@@ -23,7 +23,8 @@ void StartCounter()
     CounterStart = li.QuadPart;
 }
 
-double GetCounter()
+// gets ms passed from counter
+double get_counter()
 {
     LARGE_INTEGER li;
     QueryPerformanceCounter(&li);
@@ -215,6 +216,7 @@ boolean create_console(int width, int height, int font_w, int font_h,
     c_console->render = render;
     c_console->update = update;
 
+    c_console->on_create();
     return true;
 }
 
@@ -236,13 +238,13 @@ void run_console() {
     }
 
     // see: https://docs.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timegettime
-    StartCounter();
+    start_counter();
     double t1, t2, elapsed;
-    t1 = GetCounter();
+    t1 = get_counter();
     t2 = t1;
 
     while(c_should_close == false) {
-        t2 = GetCounter();
+        t2 = get_counter();
         elapsed = t2 - t1;
         t1 = t2;
 
@@ -631,4 +633,177 @@ void console_circle(int r, int xc, int yc, WCHAR chr, WORD attributes) {
 
 void console_circle_fill(int r, int xc, int yc, WCHAR chr, WORD attributes) {
     console_ellipse_fill(r, r, xc, yc, chr, attributes);
+}
+
+/*   ---   UI ROUTINES   ---   */
+
+bool is_flag_set(int data, int flag) {
+    return ((data & flag) == flag);
+}
+
+void render_border(Component *component,
+        wchar_t horizontal, wchar_t vertical, wchar_t top_left_corner, wchar_t top_right_corner,
+        wchar_t bottom_left_corner, wchar_t bottom_right_corner) {
+    for (int x = component->x + 1; x < component->x + component->w - 1; x++) {
+        console_draw(x, component->y, horizontal, component->attributes);
+        console_draw(x, component->y+component->h-1, horizontal, component->attributes);
+    }
+
+    for (int y = component->y + 1; y < component->y + component->h - 1; y++) {
+        console_draw(component->x, y, vertical, component->attributes);
+        console_draw(component->x + component->w - 1, y, vertical, component->attributes);
+    }
+
+    console_draw(component->x, component->y, top_left_corner, component->attributes);
+    console_draw(component->x + component->w - 1, component->y, top_right_corner, component->attributes);
+
+    console_draw(component->x, component->y + component->h - 1, bottom_left_corner, component->attributes);
+    console_draw(component->x + component->w - 1, component->y + component->h - 1, bottom_right_corner, component->attributes);
+}
+
+void render_title(Component *component) {
+    int alignment_flags = component->alignments;
+    int decoration_flags = component->decorations;
+    Point left_cap = {0, 0};
+    Point right_cap = {0, 0};
+
+    int l = lstrlenW(component->title);
+    if (l > component->w) {
+        l = l - (l - component->w) - 2;
+    }
+
+    // TODO: FIX TITLE CAPS
+    // TODO: ADD TITLE CAPS FOR BOTTOM ALIGNMENTS
+    if (is_flag_set(alignment_flags, TitleTopCenter)) {
+        int left_pad = ceil((double)component->w/2) - ceil((double)l/2);
+        left_cap.x = component->x + left_pad - 1;
+        left_cap.y = component->y;
+        right_cap.x = component->x + left_pad + l;
+        right_cap.y = component->y;
+
+        for (int i = 0; i < l; i++) {
+            console_draw(component->x + left_pad + i, component->y, component->title[i], component->attributes);
+        }
+    }
+
+    if (is_flag_set(alignment_flags, TitleTopLeft)) {
+        left_cap.x = component->x;
+        left_cap.y = component->y;
+        right_cap.x = component->x + l + 1;
+        right_cap.y = component->y;
+
+        for (int i = 0; i < l; i++) {
+            console_draw(component->x + 1 + i, component->y, component->title[i], component->attributes);
+        }
+    }
+
+    if (is_flag_set(alignment_flags, TitleTopRight)) {
+        left_cap.x = component->x + component->w - l - 2;
+        left_cap.y = component->y;
+        right_cap.x = component->x + component->w - 1;
+        right_cap.y = component->y;
+
+        for (int i = 0; i < l; i++) {
+            console_draw(component->x + component->w - 2 - i, component->y, component->title[l-1-i], component->attributes);
+        }
+    }
+
+    if (is_flag_set(alignment_flags, TitleBottomCenter)) {
+        int left_pad = ceil((double)component->w/2) - ceil((double)l/2);
+
+        for (int i = 0; i < l; i++) {
+            console_draw(component->x + left_pad + i, component->y + component->h - 1, component->title[i], component->attributes);
+        }
+    }
+
+    if (is_flag_set(alignment_flags, TitleBottomLeft)) {
+        for (int i = 0; i < l; i++) {
+            console_draw(component->x + 1 + i, component->y  + component->h - 1, component->title[i], component->attributes);
+        }
+    }
+
+    if (is_flag_set(alignment_flags, TitleBottomRight)) {
+        for (int i = 0; i < l; i++) {
+            console_draw(component->x + component->w - 2 - i, component->y  + component->h - 1, component->title[l-1-i], component->attributes);
+        }
+    }
+
+    // end caps on title if there is a border
+    if (is_flag_set(decoration_flags, SimpleBorder)) {
+        console_draw(left_cap.x, left_cap.y, L'|', component->attributes);
+        console_draw(right_cap.x, right_cap.y, L'|', component->attributes);
+    }
+
+    if (is_flag_set(decoration_flags, SingleBorder)) {
+        console_draw(left_cap.x, left_cap.y, U_LINE_LEFT_CAP_SINGLE, component->attributes);
+        console_draw(right_cap.x, right_cap.y, U_LINE_RIGHT_CAP_SINGLE, component->attributes);
+    }
+
+    if (is_flag_set(decoration_flags, DoubleBorder)) {
+        console_draw(left_cap.x, left_cap.y, U_LINE_LEFT_CAP_DOUBLE, component->attributes);
+        console_draw(right_cap.x, right_cap.y, U_LINE_RIGHT_CAP_DOUBLE, component->attributes);
+    }
+}
+
+void default_component_renderer(Component *component) {
+    for (int x = component->x; x < component->x + component->w; x++) {
+        for (int y = component->y; y < component->y + component->h; y++) {
+            console_draw(x, y, U_NULL, component->attributes);
+        }
+    }
+
+    // render decorations
+    int dec_flags = component->decorations;
+
+    if (is_flag_set(dec_flags, SingleBorder)) {
+        render_border(component, U_LINE_HORZ_SINGLE, U_LINE_VERT_SINGLE, U_LINE_TOP_LEFT_SINGLE,
+                U_LINE_TOP_RIGHT_SINGLE, U_LINE_BOTTOM_LEFT_SINGLE, U_LINE_BOTTOM_RIGHT_SINGLE);
+    }
+
+    if (is_flag_set(dec_flags, DoubleBorder)) {
+        render_border(component, U_LINE_HORZ_DOUBLE, U_LINE_VERT_DOUBLE, U_LINE_TOP_LEFT_DOUBLE,
+                      U_LINE_TOP_RIGHT_DOUBLE, U_LINE_BOTTOM_LEFT_DOUBLE, U_LINE_BOTTOM_RIGHT_DOUBLE);
+    }
+
+    if (is_flag_set(dec_flags, SimpleBorder)) {
+        render_border(component, L'-', L'|', L'+', L'+', L'+', L'+');
+    }
+
+    // render title
+    if (component->title != NULL) {
+        render_title(component);
+    }
+}
+
+void default_panel_renderer(Panel *panel) {
+    panel->component.render(&panel->component);
+}
+
+Component create_component(int x, int y, int w, int h, wchar_t* title) {
+    Component c = {0};
+    c.x = x;
+    c.y = y;
+    c.w = w;
+    c.h = h;
+    c.title = title;
+    c.attributes = FG_WHITE | BG_BLACK;
+    c.alignments = TitleTopLeft;
+    c.decorations = SingleBorder;
+    c.render = default_component_renderer;
+    return c;
+}
+
+void set_component_renderer(Component *component, void (*render)(Component *component)) {
+    component->render = render;
+}
+
+Panel create_panel(int x, int y, int w, int h, wchar_t* title) {
+    Panel p = {0};
+    p.component = create_component(x, y, w, h, title);
+    p.render = default_panel_renderer;
+    return p;
+}
+
+void set_panel_renderer(Panel *panel, void (*render)(Panel *panel)) {
+    panel->render = render;
 }

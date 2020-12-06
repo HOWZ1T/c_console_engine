@@ -6,7 +6,7 @@
 #endif
 
 
-#include <windows.h>
+#include <Windows.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <strsafe.h>
@@ -15,6 +15,7 @@
 
 #include "colors.h"
 #include "chars.h"
+#include "ui.h"
 #include "../adt/vector.h"
 
 /*   ---   STRUCTS   ---   */
@@ -97,6 +98,8 @@ key_state console_get_key(int vk);
 key_state console_get_mouse(int vk);
 
 /*   ---   UTILITIES   ---   */
+double get_counter();
+
 void brensenham_line(vec *v, int x1, int y1, int x2, int y2);
 
 /*   ---   DRAWING ROUTINES   ---   */
@@ -109,5 +112,13 @@ void console_ellipse(int rx, int ry, int xc, int yc, WCHAR chr, WORD attributes)
 void console_ellipse_fill(int rx, int ry, int xc, int yc, WCHAR chr, WORD attributes);
 void console_circle(int r, int xc, int yc, WCHAR chr, WORD attributes);
 void console_circle_fill(int r, int xc, int yc, WCHAR chr, WORD attributes);
+
+/*   ---   UI ROUTINES   ---   */
+Component create_component(int x, int y, int w, int h, wchar_t* title);
+void set_component_renderer(Component *component, void (*render)(Component *component));
+void set_component_attributes(Component *component, int attributes);
+
+Panel create_panel(int x, int y, int w, int h, wchar_t* title);
+void set_panel_renderer(Panel *panel, void (*render)(Panel *panel));
 
 #endif //CONSOLE_H

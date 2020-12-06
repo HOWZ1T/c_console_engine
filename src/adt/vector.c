@@ -1,4 +1,4 @@
-#include "vector.h"
+#include "../include/adt/vector.h"
 
 void vec_grow(vec* v) {
     v->capacity = (int)round((double)v->capacity * 1.5);
